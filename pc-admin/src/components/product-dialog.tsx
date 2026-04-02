@@ -35,7 +35,7 @@ interface ProductDialogProps {
 export function ProductDialog({ open, onOpenChange, product }: ProductDialogProps) {
   const [formData, setFormData] = useState({
     code: '',
-    nameJa: '',
+    name: '',
     category: '',
     unit: '個',
     purchasePrice: '',
@@ -47,7 +47,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
   useEffect(() => {
     setFormData({
       code: product?.code || '',
-      nameJa: product?.name || '',
+      name: product?.name || '',
       category: product?.category || '',
       unit: product?.unit || '個',
       purchasePrice: product?.purchasePrice?.toString() || '',
@@ -92,8 +92,8 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="nameJa">商品名 *</Label>
-            <Input id="nameJa" value={formData.nameJa} onChange={(e) => setFormData({ ...formData, nameJa: e.target.value })} required />
+            <Label htmlFor="name">商品名 *</Label>
+            <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
 
           <div className="grid grid-cols-4 gap-4">

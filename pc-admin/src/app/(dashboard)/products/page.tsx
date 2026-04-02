@@ -15,7 +15,7 @@ interface Product {
   salePrice: number
   stock: number
   stockWarning?: number
-  status: 'pending' | 'approved' | 'rejected'
+  status?: 'pending' | 'approved' | 'rejected'
 }
 
 const mockProducts: Product[] = [
@@ -82,7 +82,7 @@ export default function ProductsPage() {
                     {product.stock <= (product.stockWarning ?? 10) && product.stock > 0 && (
                       <span className="text-orange-500">⚠️</span>
                     )}
-                    {product.stock === 0 && <span className="text-red-500">缺货</span>}
+                    {product.stock === 0 && <span className="text-red-500">在庫切れ</span>}
                     {product.stock}個
                   </td>
                   <td className="p-3 text-center">
