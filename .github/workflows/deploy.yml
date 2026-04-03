@@ -16,10 +16,7 @@ jobs:
           node-version: '20'
       - name: Create .env.production file
         run: |
-          cat > pc-admin/.env.production << EOF
-          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          EOF
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" > pc-admin/.env.production
       - run: npm ci
         working-directory: pc-admin
       - name: Build
