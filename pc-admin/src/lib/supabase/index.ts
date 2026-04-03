@@ -1,13 +1,12 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-// Browser client singleton
+// Browser client singleton - lazy initialization
 let browserClient: ReturnType<typeof createBrowserClient> | null = null
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
 export function isSupabaseConfigured(): boolean {
-  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== 'YOUR_SUPABASE_URL')
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  return Boolean(url && key && url !== 'YOUR_SUPABASE_URL' && url.startsWith('http'))
 }
 
 export function getSupabaseBrowserClient() {
@@ -16,7 +15,10 @@ export function getSupabaseBrowserClient() {
   }
 
   if (!browserClient) {
-    browserClient = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    browserClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
   }
   return browserClient
 }
