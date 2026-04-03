@@ -3,12 +3,20 @@ import { createBrowserClient } from '@supabase/ssr'
 // Browser client singleton
 let browserClient: ReturnType<typeof createBrowserClient> | null = null
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+export function isSupabaseConfigured(): boolean {
+  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== 'YOUR_SUPABASE_URL')
+}
+
 export function getSupabaseBrowserClient() {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local')
+  }
+
   if (!browserClient) {
-    browserClient = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    browserClient = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   }
   return browserClient
 }

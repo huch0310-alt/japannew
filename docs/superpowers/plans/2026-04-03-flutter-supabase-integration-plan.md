@@ -2611,6 +2611,15 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
   final categories = ['野菜', '精肉', '鮮魚', '果物'];
   final units = ['個', 'kg', 'g', '袋', '箱', '束', '本'];
 
+  @override
+  void initState() {
+    super.initState();
+    // 加载分类列表
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductProvider>().loadCategories();
+    });
+  }
+
   Future<void> _pickImage() async {
     if (_images.length >= 5) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2679,8 +2688,12 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
   }
 
   String? _getCategoryId(String categoryName) {
-    // TODO: 根据分类名称获取分类ID，需要先加载分类列表
-    return null;
+    final categories = context.read<ProductProvider>().categories;
+    final category = categories.firstWhere(
+      (c) => c.nameJa == categoryName,
+      orElse: () => throw Exception('Category not found: $categoryName'),
+    );
+    return category.id;
   }
 
   @override
