@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../providers/product_provider.dart';
 
 class ProductUploadScreen extends StatefulWidget {
   const ProductUploadScreen({super.key});
@@ -10,7 +12,9 @@ class ProductUploadScreen extends StatefulWidget {
 
 class _ProductUploadScreenState extends State<ProductUploadScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _codeController = TextEditingController();
+  final _nameJaController = TextEditingController();
+  final _nameZhController = TextEditingController();
   final _purchasePriceController = TextEditingController();
   final _stockController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -20,6 +24,14 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
 
   final categories = ['野菜', '精肉', '鮮魚', '果物'];
   final units = ['個', 'kg', 'g', '袋', '箱', '束', '本'];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductProvider>().loadCategories();
+    });
+  }
 
   Future<void> _pickImage() async {
     if (_images.length >= 5) {
@@ -37,9 +49,70 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
     }
   }
 
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final productProvider = context.read<ProductProvider>();
+
+    try {
+      await productProvider.uploadProduct(
+        code: _codeController.text,
+        nameJa: _nameJaController.text,
+        nameZh: _nameZhController.text.isEmpty ? null : _nameZhController.text,
+        categoryId: _getCategoryId(_selectedCategory),
+        unit: _selectedUnit,
+        purchasePrice: int.parse(_purchasePriceController.text),
+        stock: int.parse(_stockController.text),
+        descriptionJa: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+        images: _images.isEmpty ? null : _images,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('提出しました'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _formKey.currentState?.reset();
+        _codeController.clear();
+        _nameJaController.clear();
+        _nameZhController.clear();
+        _purchasePriceController.clear();
+        _stockController.clear();
+        _descriptionController.clear();
+        setState(() {
+          _images.clear();
+          _selectedCategory = '野菜';
+          _selectedUnit = '個';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('提出に失敗しました: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  String? _getCategoryId(String categoryName) {
+    final categories = context.read<ProductProvider>().categories;
+    final category = categories.firstWhere(
+      (c) => c.nameJa == categoryName,
+      orElse: () => throw Exception('Category not found: $categoryName'),
+    );
+    return category.id;
+  }
+
   @override
   void dispose() {
-    _nameController.dispose();
+    _codeController.dispose();
+    _nameJaController.dispose();
+    _nameZhController.dispose();
     _purchasePriceController.dispose();
     _stockController.dispose();
     _descriptionController.dispose();
@@ -48,6 +121,8 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final productProvider = context.watch<ProductProvider>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('商品アップロード'),
@@ -83,14 +158,35 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Product Name
+            // Product Code
             TextFormField(
-              controller: _nameController,
+              controller: _codeController,
               decoration: InputDecoration(
-                labelText: '商品名 *',
+                labelText: '商品コード *',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
               validator: (value) => value?.isEmpty ?? true ? '必須' : null,
+            ),
+            const SizedBox(height: 16),
+
+            // Product Name (Japanese)
+            TextFormField(
+              controller: _nameJaController,
+              decoration: InputDecoration(
+                labelText: '商品名(日) *',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              validator: (value) => value?.isEmpty ?? true ? '必須' : null,
+            ),
+            const SizedBox(height: 16),
+
+            // Product Name (Chinese)
+            TextFormField(
+              controller: _nameZhController,
+              decoration: InputDecoration(
+                labelText: '商品名(中)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -126,7 +222,11 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
                     controller: _purchasePriceController,
                     decoration: InputDecoration(labelText: '仕入価格 *', prefixText: '¥', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
                     keyboardType: TextInputType.number,
-                    validator: (value) { if (value?.isEmpty ?? true) return '必須'; if (int.tryParse(value!) == null) return '数値を入力'; return null; },
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) return '必須';
+                      if (int.tryParse(value!) == null) return '数値を入力';
+                      return null;
+                    },
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -135,7 +235,11 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
                     controller: _stockController,
                     decoration: InputDecoration(labelText: '在庫 *', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
                     keyboardType: TextInputType.number,
-                    validator: (value) { if (value?.isEmpty ?? true) return '必須'; if (int.tryParse(value!) == null) return '数値を入力'; return null; },
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) return '必須';
+                      if (int.tryParse(value!) == null) return '数値を入力';
+                      return null;
+                    },
                   ),
                 ),
               ],
@@ -152,20 +256,16 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
 
             // Submit Button
             ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState?.validate() ?? false) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('提出しました')),
-                  );
-                }
-              },
+              onPressed: productProvider.isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3ECF8E),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              child: const Text('提出する', style: TextStyle(fontSize: 16)),
+              child: productProvider.isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('提出する', style: TextStyle(fontSize: 16)),
             ),
           ],
         ),

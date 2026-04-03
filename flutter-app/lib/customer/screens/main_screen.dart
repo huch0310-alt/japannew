@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'cart_screen.dart';
+import 'category_screen.dart';
 import 'order_history_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -13,11 +14,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final _screens = [
-    const HomeScreen(),
-    const Center(child: Text('分類')),
-    const CartScreen(),
-    const Center(child: Text('マイページ')),
+  final _screens = const [
+    HomeScreen(),
+    CategoryScreen(),
+    CartScreen(),
+    OrderHistoryScreen(),
   ];
 
   @override
@@ -33,7 +34,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
           BottomNavigationBarItem(icon: Icon(Icons.category), label: '分類'),
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'カート'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'マイページ'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴'),
         ],
       ),
     );
