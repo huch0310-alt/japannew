@@ -14,10 +14,12 @@ jobs:
         with:
           node-version: '18'
       - run: npm ci
+        working-directory: pc-admin
       - run: npm run build
+        working-directory: pc-admin
       - uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: freshbiz-admin
-          directory: out
+          directory: pc-admin/out
