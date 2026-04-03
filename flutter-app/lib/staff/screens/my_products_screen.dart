@@ -43,7 +43,7 @@ class _ProductList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final products = [
-      {'name': '新鮮な白菜', 'price': 300, 'status': 'pending'},
+      {'name': '新鮮な白菜', 'price': 300, 'status': 'pending', 'rejectReason': '価格が高すぎます'},
       {'name': '的有机胡萝卜', 'price': 200, 'status': 'pending'},
     ].where((p) => p['status'] == status).toList();
 
@@ -71,7 +71,7 @@ class _ProductList extends StatelessWidget {
             title: Text(product['name'] as String),
             subtitle: Text('¥${(product['price'] as int).toString()}'),
             trailing: status == 'rejected'
-                ? const Text('拒否理由', style: TextStyle(color: Colors.red, fontSize: 12))
+                ? Text(product['rejectReason'] ?? '拒否理由', style: const TextStyle(color: Colors.red, fontSize: 12))
                 : status == 'pending'
                     ? const Icon(Icons.edit)
                     : null,

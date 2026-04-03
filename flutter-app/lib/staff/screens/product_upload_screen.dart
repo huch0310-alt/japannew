@@ -22,6 +22,12 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
   final units = ['個', 'kg', 'g', '袋', '箱', '束', '本'];
 
   Future<void> _pickImage() async {
+    if (_images.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('最大5枚まで選択できます')),
+      );
+      return;
+    }
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.camera);
     if (image != null) {
