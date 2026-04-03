@@ -102,7 +102,7 @@ class _OrderList extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text('${order['items']}点', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                     const SizedBox(width: 12),
-                    Text('¥${(order['total'] as int).toLocaleString()}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                    Text('¥${NumberFormat('#,###').format(order['total'])}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                   ],
                 ),
                 Text('注文時間: ${order['time']}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
