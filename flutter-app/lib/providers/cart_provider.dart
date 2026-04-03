@@ -1,5 +1,3 @@
-// flutter-app/lib/providers/cart_provider.dart
-
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';

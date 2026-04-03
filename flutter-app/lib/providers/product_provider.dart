@@ -1,6 +1,4 @@
-// flutter-app/lib/providers/product_provider.dart
-
-import 'package:flutter/foundation.dart' hide Category;
+import 'package:flutter/foundation.dart';
 import '../models/product.dart';
 import '../models/category.dart';
 import '../services/supabase_service.dart';
@@ -20,10 +18,8 @@ class ProductProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // 热销商品（取前6个）
   List<Product> get hotProducts => _products.take(6).toList();
 
-  // 新品（按创建时间排序取前6个）
   List<Product> get newProducts {
     final sorted = List<Product>.from(_products)
       ..sort((a, b) => b.code.compareTo(a.code));

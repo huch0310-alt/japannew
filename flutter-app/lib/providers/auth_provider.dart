@@ -1,5 +1,3 @@
-// flutter-app/lib/providers/auth_provider.dart
-
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

@@ -1,5 +1,3 @@
-// flutter-app/lib/providers/order_provider.dart
-
 import 'package:flutter/foundation.dart';
 import '../models/order.dart';
 import '../services/supabase_service.dart';
@@ -17,7 +15,6 @@ class OrderProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // 按状态筛选订单
   List<Order> getOrdersByStatus(String status) {
     return _orders.where((o) => o.status == status).toList();
   }
@@ -60,18 +57,12 @@ class OrderProvider extends ChangeNotifier {
   }
 
   Future<Order?> getOrderById(String orderId) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
       _selectedOrder = await _supabase.getOrderById(orderId);
-      _isLoading = false;
       notifyListeners();
       return _selectedOrder;
     } catch (e) {
       _error = e.toString();
-      _isLoading = false;
       notifyListeners();
       return null;
     }
@@ -84,7 +75,6 @@ class OrderProvider extends ChangeNotifier {
 
     try {
       await _supabase.updateOrderStatus(orderId, status);
-      // 更新本地数据
       final index = _orders.indexWhere((o) => o.id == orderId);
       if (index >= 0) {
         _orders[index] = Order(
