@@ -12,18 +12,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { supabaseApi, DbUser } from '@/lib/supabase'
 
 interface UserDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  user?: {
-    name?: string
-    email?: string
-    phone?: string
-    role?: string
-    companyName?: string
-    discountRate?: string
-  } | null
+  user?: DbUser | null
 }
 
 export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
@@ -32,9 +26,8 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
     email: user?.email || '',
     phone: user?.phone || '',
     role: user?.role || 'customer',
-    companyName: user?.companyName || '',
-    discountRate: user?.discountRate || '0',
   })
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     setFormData({
@@ -42,23 +35,41 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
       email: user?.email || '',
       phone: user?.phone || '',
       role: user?.role || 'customer',
-      companyName: user?.companyName || '',
-      discountRate: user?.discountRate || '0',
     })
   }, [user])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: 调用API保存
-    console.log('Save user:', formData)
-    onOpenChange(false)
+    setIsLoading(true)
+
+    try {
+      const userData = {
+        name: formData.name,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        role: formData.role as DbUser['role'],
+      }
+
+      if (user?.id) {
+        await supabaseApi.updateUser(user.id, userData)
+      } else {
+        await supabaseApi.createUser(userData)
+      }
+
+      onOpenChange(false)
+    } catch (err) {
+      console.error('Failed to save user:', err)
+      alert('保存に失敗しました')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{user ? 'ユーザーを編集' : '新規ユーザーを作成'}</DialogTitle>
+          <DialogTitle>{user?.id ? 'ユーザーを編集' : '新規ユーザーを作成'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -73,15 +84,15 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">役割 *</Label>
-              <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
+              <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v || 'customer' })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="super_admin">超级管理员</SelectItem>
-                  <SelectItem value="sales_manager">销售主管</SelectItem>
-                  <SelectItem value="purchaser">采购人员</SelectItem>
-                  <SelectItem value="customer">客户</SelectItem>
+                  <SelectItem value="super_admin">超級管理者</SelectItem>
+                  <SelectItem value="sales_manager">営業マネージャー</SelectItem>
+                  <SelectItem value="purchaser">仕入担当者</SelectItem>
+                  <SelectItem value="customer">顧客</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -107,20 +118,13 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="companyName">会社名</Label>
-            <Input
-              id="companyName"
-              value={formData.companyName}
-              onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-            />
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               キャンセル
             </Button>
-            <Button type="submit">保存</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? '保存中...' : '保存'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

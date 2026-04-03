@@ -1,41 +1,70 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { SalesChart } from '@/components/dashboard/sales-chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DollarSign, ShoppingCart, Package, FileText } from 'lucide-react'
+import { supabaseApi } from '@/lib/supabase'
 
-export default async function DashboardPage() {
-  // TODO: 从Supabase获取真实数据
-  const stats = {
-    todaySales: '¥1,234,560',
-    todayOrders: 48,
-    pendingProducts: 5,
-    pendingInvoices: 12,
+export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    todaySales: '¥0',
+    todayOrders: 0,
+    pendingProducts: 0,
+    pendingInvoices: 0,
+  })
+  const [chartData, setChartData] = useState<{ date: string; amount: number }[]>([])
+  const [recentOrders, setRecentOrders] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const loadDashboardData = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const dashboardStats = await supabaseApi.getDashboardStats()
+      setStats({
+        todaySales: `¥${dashboardStats.recentOrders.reduce((sum: number, o: any) => sum + (o.total_in_tax || 0), 0).toLocaleString()}`,
+        todayOrders: dashboardStats.ordersCount,
+        pendingProducts: dashboardStats.productsCount,
+        pendingInvoices: 0,
+      })
+
+      // Transform recent orders for chart
+      const transformed = dashboardStats.recentOrders.map((o: any) => ({
+        date: new Date(o.created_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }),
+        amount: o.total_in_tax || 0,
+      }))
+      setChartData(transformed)
+      setRecentOrders(dashboardStats.recentOrders.slice(0, 5))
+    } catch (err) {
+      console.error('Failed to load dashboard:', err)
+      // Keep default values on error
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
+
+  const statusLabels: Record<string, { label: string; className: string }> = {
+    pending: { label: '未確認', className: 'bg-blue-100 text-blue-700' },
+    confirmed: { label: '確認済', className: 'bg-orange-100 text-orange-700' },
+    printed: { label: '印刷済', className: 'bg-green-100 text-green-700' },
+    invoiced: { label: '請求書済', className: 'bg-purple-100 text-purple-700' },
+    paid: { label: '支払済', className: 'bg-gray-100 text-gray-700' },
+    cancelled: { label: 'キャンセル', className: 'bg-red-100 text-red-700' },
   }
-
-  const chartData = [
-    { date: '4/1', amount: 800000 },
-    { date: '4/2', amount: 950000 },
-    { date: '4/3', amount: 850000 },
-    { date: '4/4', amount: 1100000 },
-    { date: '4/5', amount: 980000 },
-    { date: '4/6', amount: 1200000 },
-    { date: '4/7', amount: 1050000 },
-  ]
-
-  const recentOrders = [
-    { id: 'ORD-20260403-001', customer: 'ABC株式会社', amount: '¥45,600', status: '待确认', time: '10:23' },
-    { id: 'ORD-20260403-002', customer: 'XYZ商事', amount: '¥123,400', status: '已确认', time: '09:45' },
-    { id: 'ORD-20260403-003', customer: '千代田精肉店', amount: '¥78,900', status: '已打印', time: '09:12' },
-  ]
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">仪表盘</h1>
+      <h1 className="text-2xl font-bold">ダッシュボード</h1>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
-          title="今日销售额"
+          title="本日の売上"
           value={stats.todaySales}
           change="+12.5%"
           changeType="increase"
@@ -43,24 +72,24 @@ export default async function DashboardPage() {
           iconColor="text-green-600"
         />
         <StatsCard
-          title="今日订单"
-          value={stats.todayOrders}
+          title="本日の注文"
+          value={stats.todayOrders.toString()}
           change="+8件"
           changeType="increase"
           icon={<ShoppingCart className="h-6 w-6" />}
           iconColor="text-blue-600"
         />
         <StatsCard
-          title="待审核商品"
-          value={stats.pendingProducts}
-          change="需要处理"
+          title="審査待ち商品"
+          value={stats.pendingProducts.toString()}
+          change="要処理"
           icon={<Package className="h-6 w-6" />}
           iconColor="text-orange-600"
         />
         <StatsCard
-          title="待收款请求书"
-          value={stats.pendingInvoices}
-          change="¥2,345,000"
+          title="未回収請求書"
+          value={stats.pendingInvoices.toString()}
+          change="¥0"
           icon={<FileText className="h-6 w-6" />}
           iconColor="text-red-600"
         />
@@ -70,25 +99,18 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <SalesChart data={chartData} className="lg:col-span-2" />
 
-        {/* Top Products */}
+        {/* Top Products - Placeholder */}
         <Card>
           <CardHeader>
             <CardTitle>销量TOP5</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { name: 'ほうれん草', qty: '234個' },
-                { name: '大根', qty: '198本' },
-                { name: '白菜', qty: '156個' },
-                { name: 'にんじん', qty: '145本' },
-                { name: 'じゃがいも', qty: '132kg' },
-              ].map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span className="text-gray-600">{i + 1}. {item.name}</span>
-                  <span className="font-bold">{item.qty}</span>
-                </div>
-              ))}
+            <div className="space-y-3 text-gray-500">
+              {isLoading ? (
+                <div className="text-center py-4">読み込み中...</div>
+              ) : (
+                <div className="text-center py-4">データがありません</div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -97,40 +119,41 @@ export default async function DashboardPage() {
       {/* Recent Orders */}
       <Card>
         <CardHeader>
-          <CardTitle>最近订单</CardTitle>
+          <CardTitle>最近注文</CardTitle>
         </CardHeader>
         <CardContent>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="text-left p-3 font-medium">订单号</th>
-                <th className="text-left p-3 font-medium">客户</th>
-                <th className="text-right p-3 font-medium">金额</th>
-                <th className="text-center p-3 font-medium">状态</th>
-                <th className="text-left p-3 font-medium">时间</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map((order, i) => (
-                <tr key={i} className="border-t">
-                  <td className="p-3 font-mono text-sm">{order.id}</td>
-                  <td className="p-3">{order.customer}</td>
-                  <td className="p-3 text-right font-bold font-mono">{order.amount}</td>
-                  <td className="p-3 text-center">
-                    <span className={`
-                      px-2 py-1 rounded text-xs
-                      ${order.status === '待确认' ? 'bg-blue-100 text-blue-700' : ''}
-                      ${order.status === '已确认' ? 'bg-orange-100 text-orange-700' : ''}
-                      ${order.status === '已打印' ? 'bg-green-100 text-green-700' : ''}
-                    `}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-gray-500">{order.time}</td>
+          {isLoading ? (
+            <div className="p-8 text-center text-gray-500">読み込み中...</div>
+          ) : recentOrders.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">注文がありません</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="text-left p-3 font-medium">注文番号</th>
+                  <th className="text-right p-3 font-medium">金額</th>
+                  <th className="text-center p-3 font-medium">状態</th>
+                  <th className="text-left p-3 font-medium">時間</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentOrders.map((order, i) => (
+                  <tr key={i} className="border-t">
+                    <td className="p-3 font-mono text-sm">{order.order_number}</td>
+                    <td className="p-3 text-right font-bold font-mono">¥{order.total_in_tax?.toLocaleString()}</td>
+                    <td className="p-3 text-center">
+                      <span className={statusLabels[order.status]?.className || 'bg-gray-100 text-gray-700'}>
+                        {statusLabels[order.status]?.label || order.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-gray-500">
+                      {new Date(order.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </CardContent>
       </Card>
     </div>

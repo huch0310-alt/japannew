@@ -1,25 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { UserTable } from './_components/user-table'
 import { UserDialog } from '@/components/user-dialog'
 import { Plus } from 'lucide-react'
-import type { User } from './_components/user-table'
-
-// Mock数据
-const mockUsers = [
-  { id: '1', name: '山田太郎', email: 'yamada@abc.co.jp', role: 'purchaser', isActive: true },
-  { id: '2', name: '佐藤花子', email: 'sato@freshbiz.jp', role: 'sales_manager', isActive: true },
-  { id: '3', name: 'ABC株式会社', email: 'order@abc.co.jp', role: 'customer', isActive: true, companyName: 'ABC株式会社' },
-]
+import { supabaseApi, DbUser } from '@/lib/supabase'
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<DbUser[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedUser, setSelectedUser] = useState<DbUser | null>(null)
 
-  const handleEdit = (user: User) => {
+  const loadUsers = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const data = await supabaseApi.getUsers()
+      setUsers(data)
+    } catch (err) {
+      console.error('Failed to load users:', err)
+      setError('ユーザーの読み込みに失敗しました')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadUsers()
+  }, [loadUsers])
+
+  const handleEdit = (user: DbUser) => {
     setSelectedUser(user)
     setDialogOpen(true)
   }
@@ -27,6 +41,14 @@ export default function UsersPage() {
   const handleCreate = () => {
     setSelectedUser(null)
     setDialogOpen(true)
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    setDialogOpen(open)
+    if (!open) {
+      setSelectedUser(null)
+      loadUsers()
+    }
   }
 
   return (
@@ -39,16 +61,26 @@ export default function UsersPage() {
         </Button>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>ユーザーリスト</CardTitle>
         </CardHeader>
         <CardContent>
-          <UserTable users={mockUsers} onEdit={handleEdit} />
+          {isLoading ? (
+            <div className="p-8 text-center text-gray-500">読み込み中...</div>
+          ) : (
+            <UserTable users={users} onEdit={handleEdit} />
+          )}
         </CardContent>
       </Card>
 
-      <UserDialog open={dialogOpen} onOpenChange={setDialogOpen} user={selectedUser} />
+      <UserDialog open={dialogOpen} onOpenChange={handleDialogClose} user={selectedUser} />
     </div>
   )
 }

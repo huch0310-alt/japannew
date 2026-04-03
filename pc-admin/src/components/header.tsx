@@ -31,7 +31,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4">
-        <Select value={language} onValueChange={setLanguage}>
+        <Select value={language} onValueChange={(v) => setLanguage(v || 'ja')}>
           <SelectTrigger className="w-24 bg-transparent border-white/30 text-white">
             <SelectValue />
           </SelectTrigger>
