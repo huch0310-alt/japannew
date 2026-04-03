@@ -113,7 +113,7 @@ serve(async (req) => {
 
   // Format currency
   const formatYen = (amount: number) => {
-    return `¥${amount.toLocaleString()}`
+    return `¥${amount.toLocaleString('ja-JP')}`
   }
 
   // Issue date and due date
