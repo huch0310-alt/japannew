@@ -10,31 +10,29 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export function getSupabaseBrowserClient() {
-  // Guard against build-time evaluation (Turbopack/Next.js build analysis)
+  // Skip client creation during build-time (Turbopack may evaluate this)
   if (typeof window === 'undefined') {
-    // Server-side or build-time - return a mock that won't break build
-    // but can't actually be used at runtime without re-initialization
     return null as any
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
-  if (!url || !key || url === 'YOUR_SUPABASE_URL') {
-    throw new Error('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local')
-  }
-
-  // Validate URL format
   try {
-    new URL(url)
-  } catch {
-    throw new Error(`Invalid Supabase URL: ${url}`)
-  }
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-  if (!browserClient) {
-    browserClient = createBrowserClient(url, key)
+    if (!url || !key || url === 'YOUR_SUPABASE_URL') {
+      return null as any
+    }
+
+    // Validate URL format
+    new URL(url)
+
+    if (!browserClient) {
+      browserClient = createBrowserClient(url, key)
+    }
+    return browserClient
+  } catch {
+    return null as any
   }
-  return browserClient
 }
 
 // Types matching Supabase schema

@@ -18,7 +18,9 @@ export function Header() {
   const [language, setLanguage] = useState('ja')
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
     router.push('/login')
     router.refresh()
   }

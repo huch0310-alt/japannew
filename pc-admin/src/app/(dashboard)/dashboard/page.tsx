@@ -1,163 +1,59 @@
+import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { DashboardClient } from '@/components/dashboard/dashboard-client'
+
+// Force dynamic rendering to avoid SSG issues with Supabase
 export const dynamic = 'force-dynamic'
 
-'use client'
-
-import { useState, useEffect, useCallback } from 'react'
-import { StatsCard } from '@/components/dashboard/stats-card'
-import { SalesChart } from '@/components/dashboard/sales-chart'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DollarSign, ShoppingCart, Package, FileText } from 'lucide-react'
-import { supabaseApi } from '@/lib/supabase'
-
-export default function DashboardPage() {
-  const [stats, setStats] = useState({
-    todaySales: '¥0',
-    todayOrders: 0,
-    pendingProducts: 0,
-    pendingInvoices: 0,
-  })
-  const [chartData, setChartData] = useState<{ date: string; amount: number }[]>([])
-  const [recentOrders, setRecentOrders] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  const loadDashboardData = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const dashboardStats = await supabaseApi.getDashboardStats()
-      setStats({
-        todaySales: `¥${dashboardStats.recentOrders.reduce((sum: number, o: any) => sum + (o.total_in_tax || 0), 0).toLocaleString()}`,
-        todayOrders: dashboardStats.ordersCount,
-        pendingProducts: dashboardStats.productsCount,
+async function getDashboardData() {
+  try {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) {
+      return {
+        todaySales: '¥0',
+        todayOrders: 0,
+        pendingProducts: 0,
         pendingInvoices: 0,
-      })
-
-      // Transform recent orders for chart
-      const transformed = dashboardStats.recentOrders.map((o: any) => ({
-        date: new Date(o.created_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }),
-        amount: o.total_in_tax || 0,
-      }))
-      setChartData(transformed)
-      setRecentOrders(dashboardStats.recentOrders.slice(0, 5))
-    } catch (err) {
-      console.error('Failed to load dashboard:', err)
-      // Keep default values on error
-    } finally {
-      setIsLoading(false)
+        chartData: [],
+        recentOrders: []
+      }
     }
-  }, [])
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [loadDashboardData])
+    const { data: productsData } = await supabase.from('products').select('id', { count: 'exact', head: true })
+    const { data: ordersData } = await supabase.from('orders').select('id', { count: 'exact', head: true })
+    const { data: recentOrdersData } = await supabase
+      .from('orders')
+      .select('total_in_tax, created_at, order_number, status')
+      .order('created_at', { ascending: false })
+      .limit(7)
 
-  const statusLabels: Record<string, { label: string; className: string }> = {
-    pending: { label: '未確認', className: 'bg-blue-100 text-blue-700' },
-    confirmed: { label: '確認済', className: 'bg-orange-100 text-orange-700' },
-    printed: { label: '印刷済', className: 'bg-green-100 text-green-700' },
-    invoiced: { label: '請求書済', className: 'bg-purple-100 text-purple-700' },
-    paid: { label: '支払済', className: 'bg-gray-100 text-gray-700' },
-    cancelled: { label: 'キャンセル', className: 'bg-red-100 text-red-700' },
+    const ordersTotal = recentOrdersData?.reduce((sum: number, o: any) => sum + (o.total_in_tax || 0), 0) || 0
+
+    return {
+      todaySales: `¥${ordersTotal.toLocaleString()}`,
+      todayOrders: ordersData?.count || 0,
+      pendingProducts: productsData?.count || 0,
+      pendingInvoices: 0,
+      chartData: recentOrdersData?.map((o: any) => ({
+        date: new Date(o.created_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }),
+        amount: o.total_in_tax || 0
+      })) || [],
+      recentOrders: recentOrdersData?.slice(0, 5) || []
+    }
+  } catch (err) {
+    console.error('Failed to load dashboard data:', err)
+    return {
+      todaySales: '¥0',
+      todayOrders: 0,
+      pendingProducts: 0,
+      pendingInvoices: 0,
+      chartData: [],
+      recentOrders: []
+    }
   }
+}
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">ダッシュボード</h1>
+export default async function DashboardPage() {
+  const initialData = await getDashboardData()
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="本日の売上"
-          value={stats.todaySales}
-          change="+12.5%"
-          changeType="increase"
-          icon={<DollarSign className="h-6 w-6" />}
-          iconColor="text-green-600"
-        />
-        <StatsCard
-          title="本日の注文"
-          value={stats.todayOrders.toString()}
-          change="+8件"
-          changeType="increase"
-          icon={<ShoppingCart className="h-6 w-6" />}
-          iconColor="text-blue-600"
-        />
-        <StatsCard
-          title="審査待ち商品"
-          value={stats.pendingProducts.toString()}
-          change="要処理"
-          icon={<Package className="h-6 w-6" />}
-          iconColor="text-orange-600"
-        />
-        <StatsCard
-          title="未回収請求書"
-          value={stats.pendingInvoices.toString()}
-          change="¥0"
-          icon={<FileText className="h-6 w-6" />}
-          iconColor="text-red-600"
-        />
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SalesChart data={chartData} className="lg:col-span-2" />
-
-        {/* Top Products - Placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle>销量TOP5</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 text-gray-500">
-              {isLoading ? (
-                <div className="text-center py-4">読み込み中...</div>
-              ) : (
-                <div className="text-center py-4">データがありません</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Orders */}
-      <Card>
-        <CardHeader>
-          <CardTitle>最近注文</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="p-8 text-center text-gray-500">読み込み中...</div>
-          ) : recentOrders.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">注文がありません</div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="text-left p-3 font-medium">注文番号</th>
-                  <th className="text-right p-3 font-medium">金額</th>
-                  <th className="text-center p-3 font-medium">状態</th>
-                  <th className="text-left p-3 font-medium">時間</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((order, i) => (
-                  <tr key={i} className="border-t">
-                    <td className="p-3 font-mono text-sm">{order.order_number}</td>
-                    <td className="p-3 text-right font-bold font-mono">¥{order.total_in_tax?.toLocaleString()}</td>
-                    <td className="p-3 text-center">
-                      <span className={statusLabels[order.status]?.className || 'bg-gray-100 text-gray-700'}>
-                        {statusLabels[order.status]?.label || order.status}
-                      </span>
-                    </td>
-                    <td className="p-3 text-gray-500">
-                      {new Date(order.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
+  return <DashboardClient initialData={initialData} />
 }
