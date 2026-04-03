@@ -10,6 +10,13 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export function getSupabaseBrowserClient() {
+  // Guard against build-time evaluation (Turbopack/Next.js build analysis)
+  if (typeof window === 'undefined') {
+    // Server-side or build-time - return a mock that won't break build
+    // but can't actually be used at runtime without re-initialization
+    return null as any
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
@@ -120,6 +127,7 @@ export const supabaseApi = {
   // ============ Products ============
   async getProducts(): Promise<DbProduct[]> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return []
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -130,6 +138,7 @@ export const supabaseApi = {
 
   async getProductById(id: string): Promise<DbProduct | null> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return null
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -141,6 +150,7 @@ export const supabaseApi = {
 
   async createProduct(product: Partial<DbProduct>): Promise<DbProduct> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) throw new Error('Supabase not available')
     const { data, error } = await supabase
       .from('products')
       .insert(product)
@@ -152,6 +162,7 @@ export const supabaseApi = {
 
   async updateProduct(id: string, product: Partial<DbProduct>): Promise<DbProduct> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) throw new Error('Supabase not available')
     const { data, error } = await supabase
       .from('products')
       .update(product)
@@ -164,12 +175,14 @@ export const supabaseApi = {
 
   async deleteProduct(id: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return
     const { error } = await supabase.from('products').delete().eq('id', id)
     if (error) throw error
   },
 
   async approveProduct(id: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return
     const { error } = await supabase
       .from('products')
       .update({ status: 'approved' })
@@ -179,6 +192,7 @@ export const supabaseApi = {
 
   async rejectProduct(id: string, reason: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return
     const { error } = await supabase
       .from('products')
       .update({ status: 'rejected', reject_reason: reason })
@@ -189,6 +203,7 @@ export const supabaseApi = {
   // ============ Categories ============
   async getCategories(): Promise<DbCategory[]> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return []
     const { data, error } = await supabase
       .from('categories')
       .select('*')
@@ -200,6 +215,7 @@ export const supabaseApi = {
   // ============ Orders ============
   async getOrders(): Promise<(DbOrder & { order_items: DbOrderItem[] })[]> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return []
     const { data, error } = await supabase
       .from('orders')
       .select('*, order_items(*)')
@@ -210,6 +226,7 @@ export const supabaseApi = {
 
   async getOrderById(id: string): Promise<(DbOrder & { order_items: DbOrderItem[] }) | null> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return null
     const { data, error } = await supabase
       .from('orders')
       .select('*, order_items(*)')
@@ -221,6 +238,7 @@ export const supabaseApi = {
 
   async updateOrderStatus(id: string, status: DbOrder['status']): Promise<void> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return
     const { error } = await supabase
       .from('orders')
       .update({ status })
@@ -231,6 +249,7 @@ export const supabaseApi = {
   // ============ Users ============
   async getUsers(): Promise<DbUser[]> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return []
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -241,6 +260,7 @@ export const supabaseApi = {
 
   async getUserById(id: string): Promise<DbUser | null> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return null
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -252,6 +272,7 @@ export const supabaseApi = {
 
   async createUser(user: Partial<DbUser>): Promise<DbUser> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) throw new Error('Supabase not available')
     const { data, error } = await supabase
       .from('users')
       .insert(user)
@@ -263,6 +284,7 @@ export const supabaseApi = {
 
   async updateUser(id: string, user: Partial<DbUser>): Promise<DbUser> {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) throw new Error('Supabase not available')
     const { data, error } = await supabase
       .from('users')
       .update(user)
@@ -276,6 +298,7 @@ export const supabaseApi = {
   // ============ Dashboard Stats ============
   async getDashboardStats() {
     const supabase = getSupabaseBrowserClient()
+    if (!supabase) return { productsCount: 0, ordersCount: 0, usersCount: 0, recentOrders: [] }
 
     const [productsCount, ordersCount, usersCount, recentOrders] = await Promise.all([
       supabase.from('products').select('id', { count: 'exact', head: true }),
