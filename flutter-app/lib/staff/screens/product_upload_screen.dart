@@ -38,10 +38,19 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _purchasePriceController.dispose();
+    _stockController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('商品上传'),
+        title: const Text('商品アップロード'),
         backgroundColor: const Color(0xFF3ECF8E),
         foregroundColor: Colors.white,
       ),
@@ -117,7 +126,7 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
                     controller: _purchasePriceController,
                     decoration: InputDecoration(labelText: '仕入価格 *', prefixText: '¥', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
                     keyboardType: TextInputType.number,
-                    validator: (value) => value?.isEmpty ?? true ? '必須' : null,
+                    validator: (value) { if (value?.isEmpty ?? true) return '必須'; if (int.tryParse(value!) == null) return '数値を入力'; return null; },
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -126,7 +135,7 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
                     controller: _stockController,
                     decoration: InputDecoration(labelText: '在庫 *', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
                     keyboardType: TextInputType.number,
-                    validator: (value) => value?.isEmpty ?? true ? '必須' : null,
+                    validator: (value) { if (value?.isEmpty ?? true) return '必須'; if (int.tryParse(value!) == null) return '数値を入力'; return null; },
                   ),
                 ),
               ],
@@ -145,7 +154,9 @@ class _ProductUploadScreenState extends State<ProductUploadScreen> {
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState?.validate() ?? false) {
-                  // Submit
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('提出しました')),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
