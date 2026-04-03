@@ -250,7 +250,8 @@ class SupabaseService {
         throw ServiceException('Failed to create order items, order rolled back', e);
       }
 
-      return getOrderById(orderId) ?? Order.fromJson(orderResponse);
+      final createdOrder = await getOrderById(orderId);
+      return createdOrder ?? Order.fromJson(orderResponse);
     } catch (e) {
       if (e is ServiceException) rethrow;
       throw ServiceException('Failed to create order', e);

@@ -2,7 +2,7 @@
   "@@locale": "zh",
   "appTitle": "FreshBiz",
   "login": "登录",
-  "loginWithPhone": "手机号登录",
+  "account": "账号",
   "password": "密码",
   "home": "首页",
   "categories": "分类",

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class L10n {
   static final Map<String, Map<String, String>> _translations = {
     'ja': {

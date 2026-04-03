@@ -60,12 +60,18 @@ class OrderProvider extends ChangeNotifier {
   }
 
   Future<Order?> getOrderById(String orderId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
     try {
       _selectedOrder = await _supabase.getOrderById(orderId);
+      _isLoading = false;
       notifyListeners();
       return _selectedOrder;
     } catch (e) {
       _error = e.toString();
+      _isLoading = false;
       notifyListeners();
       return null;
     }
