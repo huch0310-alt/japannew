@@ -14,13 +14,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
-      - name: Set env vars
-        uses: motdotla/dotenv@v3
-        with:
-          path: pc-admin/.env.production
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      - name: Create .env.production file
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" > pc-admin/.env.production
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> pc-admin/.env.production
+          cat pc-admin/.env.production
       - run: npm ci
         working-directory: pc-admin
       - name: Build
