@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../main_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,44 +10,39 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController();
+  final _accountController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _accountController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
-    setState(() => _isLoading = true);
+    final authProvider = context.read<AuthProvider>();
 
-    final response = await Supabase.instance.client.auth.signInWithPassword(
-      email: _phoneController.text,
-      password: _passwordController.text,
+    final success = await authProvider.signIn(
+      _accountController.text.trim(),
+      _passwordController.text,
     );
 
-    setState(() => _isLoading = false);
-
-    if (response.user != null) {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-        );
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ログインに失敗しました')),
-        );
-      }
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.error ?? 'ログインに失敗しました'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -60,13 +55,14 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text('新鮮な野菜をお届けします', style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 48),
               TextField(
-                controller: _phoneController,
+                controller: _accountController,
                 decoration: InputDecoration(
-                  labelText: '電話番号',
-                  prefixText: '📱 ',
+                  labelText: 'アカウント',
+                  prefixText: '👤 ',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                keyboardType: TextInputType.phone,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
               TextField(
@@ -75,21 +71,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: 'パスワード',
                   prefixText: '🔒 ',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
                 ),
-                obscureText: true,
+                obscureText: _obscurePassword,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _login(),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
+                  onPressed: authProvider.isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0F4C81),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: _isLoading
+                  child: authProvider.isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text('ログイン', style: TextStyle(fontSize: 16)),
                 ),
