@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'cart_screen.dart';
+import 'order_history_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,7 +16,7 @@ class _MainScreenState extends State<MainScreen> {
   final _screens = [
     const HomeScreen(),
     const Center(child: Text('分類')),
-    const Center(child: Text('カート')),
+    const CartScreen(),
     const Center(child: Text('マイページ')),
   ];
 
