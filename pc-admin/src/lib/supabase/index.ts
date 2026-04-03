@@ -10,15 +10,22 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export function getSupabaseBrowserClient() {
-  if (!isSupabaseConfigured()) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+  if (!url || !key || url === 'YOUR_SUPABASE_URL') {
     throw new Error('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local')
   }
 
+  // Validate URL format
+  try {
+    new URL(url)
+  } catch {
+    throw new Error(`Invalid Supabase URL: ${url}`)
+  }
+
   if (!browserClient) {
-    browserClient = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    browserClient = createBrowserClient(url, key)
   }
   return browserClient
 }
