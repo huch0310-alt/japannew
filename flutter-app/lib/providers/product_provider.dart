@@ -7,13 +7,13 @@ class ProductProvider extends ChangeNotifier {
   final SupabaseService _supabase = SupabaseService();
 
   List<Product> _products = [];
-  List<Category> _categories = [];
+  List<ProductCategory> _categories = [];
   Product? _selectedProduct;
   bool _isLoading = false;
   String? _error;
 
   List<Product> get products => _products;
-  List<Category> get categories => _categories;
+  List<ProductCategory> get categories => _categories;
   Product? get selectedProduct => _selectedProduct;
   bool get isLoading => _isLoading;
   String? get error => _error;

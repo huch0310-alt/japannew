@@ -190,7 +190,7 @@ class SupabaseService {
 
   // ============ 分类 ============
 
-  Future<List<Category>> getCategories() async {
+  Future<List<ProductCategory>> getCategories() async {
     _checkInitialized();
     try {
       final response = await _client
@@ -198,7 +198,7 @@ class SupabaseService {
           .select()
           .order('sort_order', ascending: true);
 
-      return (response as List).map((e) => Category.fromJson(e)).toList();
+      return (response as List).map((e) => ProductCategory.fromJson(e)).toList();
     } catch (e) {
       throw ServiceException('Failed to fetch categories', e);
     }

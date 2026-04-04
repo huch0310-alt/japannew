@@ -1,13 +1,13 @@
 // flutter-app/lib/models/category.dart
 
-class Category {
+class ProductCategory {
   final String id;
   final String nameJa;
   final String? nameZh;
   final String? parentId;
   final int sortOrder;
 
-  const Category({
+  const ProductCategory({
     required this.id,
     required this.nameJa,
     this.nameZh,
@@ -17,8 +17,8 @@ class Category {
 
   String get displayName => nameJa;
 
-  factory Category.fromJson(Map<String, dynamic> json) {
-    return Category(
+  factory ProductCategory.fromJson(Map<String, dynamic> json) {
+    return ProductCategory(
       id: json['id'] as String,
       nameJa: json['name_ja'] as String,
       nameZh: json['name_zh'] as String?,
