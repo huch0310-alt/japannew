@@ -1,0 +1,7 @@
+name = "freshbiz-worker"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = ".open-next/assets"
+
+[env.production]
+name = "freshbiz-worker"
+pages_build_output_dir = ".open-next/assets"
