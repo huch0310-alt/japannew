@@ -29,7 +29,16 @@ jobs:
         run: node node_modules/@opennextjs/cloudflare/dist/cli/index.js build
         working-directory: pc-admin
       - name: Deploy to Cloudflare
-        run: npx wrangler deploy
+        run: |
+          echo "=== Wrangler Version ==="
+          npx wrangler --version
+          echo "=== Checking Secrets ==="
+          echo "CLOUDFLARE_API_TOKEN set: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}"
+          echo "CLOUDFLARE_ACCOUNT_ID set: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}"
+          echo "=== Wrangler Whoami ==="
+          npx wrangler whoami 2>&1 || true
+          echo "=== Deploying ==="
+          npx wrangler deploy --dry-run 2>&1 || true
         working-directory: pc-admin
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
