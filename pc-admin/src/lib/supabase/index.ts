@@ -120,6 +120,37 @@ export interface DbOrderItem {
   note: string | null
 }
 
+export interface DbInvoice {
+  id: string
+  invoice_number: string
+  customer_id: string
+  customer_name?: string
+  total_in_tax: number
+  status: 'unpaid' | 'paid' | 'overdue'
+  issue_date: string
+  due_date: string
+  paid_at: string | null
+  pdf_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DbSystemSettings {
+  id: string
+  company_name: string
+  company_address: string | null
+  company_phone: string | null
+  tax_id: string | null
+  bank_name: string | null
+  bank_branch: string | null
+  bank_account_type: string | null
+  bank_account_number: string | null
+  tax_rate: number
+  default_payment_term_days: number
+  created_at: string
+  updated_at: string
+}
+
 // API functions
 export const supabaseApi = {
   // ============ Products ============
@@ -313,6 +344,102 @@ export const supabaseApi = {
       ordersCount: ordersCount.count || 0,
       usersCount: usersCount.count || 0,
       recentOrders: recentOrders.data || []
+    }
+  },
+
+  // ============ Invoices ============
+  async getInvoices(): Promise<DbInvoice[]> {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) return []
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return data || []
+  },
+
+  async getInvoiceById(id: string): Promise<DbInvoice | null> {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) return null
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('id', id)
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async createInvoice(invoice: Partial<DbInvoice>): Promise<DbInvoice> {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) throw new Error('Supabase not available')
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert(invoice)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async updateInvoiceStatus(id: string, status: DbInvoice['status']): Promise<void> {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) return
+    const update: Partial<DbInvoice> = { status }
+    if (status === 'paid') {
+      update.paid_at = new Date().toISOString()
+    }
+    const { error } = await supabase
+      .from('invoices')
+      .update(update)
+      .eq('id', id)
+    if (error) throw error
+  },
+
+  // ============ System Settings ============
+  async getSystemSettings(): Promise<DbSystemSettings | null> {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) return null
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('*')
+      .limit(1)
+      .single()
+    if (error && error.code !== 'PGRST116') throw error
+    return data
+  },
+
+  async updateSystemSettings(settings: Partial<DbSystemSettings>): Promise<DbSystemSettings> {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) throw new Error('Supabase not available')
+
+    // Get existing settings
+    const existing = await supabase
+      .from('system_settings')
+      .select('id')
+      .limit(1)
+      .single()
+
+    if (existing.data) {
+      // Update existing
+      const { data, error } = await supabase
+        .from('system_settings')
+        .update(settings)
+        .eq('id', existing.data.id)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    } else {
+      // Insert new
+      const { data, error } = await supabase
+        .from('system_settings')
+        .insert(settings)
+        .select()
+        .single()
+      if (error) throw error
+      return data
     }
   }
 }
