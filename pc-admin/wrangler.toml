@@ -1,9 +1,7 @@
 name = "freshbiz-worker"
 main = ".open-next/worker.js"
 compatibility_date = "2024-01-01"
-assets = { directory = ".open-next/assets" }
 
 [env.production]
 name = "freshbiz-worker"
 main = ".open-next/worker.js"
-assets = { directory = ".open-next/assets" }
