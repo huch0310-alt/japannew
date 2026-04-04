@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'cart_screen.dart';
 import 'category_screen.dart';
 import 'order_history_screen.dart';
+import 'profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     CategoryScreen(),
     CartScreen(),
-    OrderHistoryScreen(),
+    ProfileScreen(),
   ];
 
   @override
@@ -34,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
           BottomNavigationBarItem(icon: Icon(Icons.category), label: '分類'),
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'カート'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: '履歴'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: '自分'),
         ],
       ),
     );

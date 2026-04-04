@@ -6,6 +6,8 @@ import '../models/product.dart';
 import '../models/category.dart';
 import '../models/cart_item.dart';
 import '../models/order.dart';
+import '../models/customer.dart';
+import '../models/invoice.dart';
 
 class ServiceException implements Exception {
   final String message;
@@ -314,6 +316,48 @@ class SupabaseService {
           .eq('id', orderId);
     } catch (e) {
       throw ServiceException('Failed to update order status', e);
+    }
+  }
+
+  // ============ 客户 ============
+
+  Future<Customer?> getCustomer(String customerId) async {
+    _checkInitialized();
+    try {
+      final response = await _client
+          .from('customers')
+          .select()
+          .eq('id', customerId)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return Customer.fromJson(response);
+    } catch (e) {
+      throw ServiceException('Failed to fetch customer', e);
+    }
+  }
+
+  Future<List<Invoice>> getCustomerInvoices(String customerId) async {
+    _checkInitialized();
+    try {
+      final response = await _client
+          .from('invoices')
+          .select()
+          .eq('customer_id', customerId)
+          .order('created_at', ascending: false);
+
+      return (response as List).map((e) => Invoice.fromJson(e)).toList();
+    } catch (e) {
+      throw ServiceException('Failed to fetch customer invoices', e);
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    _checkInitialized();
+    try {
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
+    } catch (e) {
+      throw ServiceException('Failed to update password', e);
     }
   }
 }
