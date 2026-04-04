@@ -28,14 +28,14 @@ jobs:
       - name: Build OpenNext bundle
         run: node node_modules/@opennextjs/cloudflare/dist/cli/index.js build
         working-directory: pc-admin
-      - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy .open-next/assets --project-name=freshbiz-app
+      - name: Create Cloudflare Pages Project
+        run: npx wrangler pages project create freshbiz-app --production-branch=main 2>/dev/null || true
         working-directory: pc-admin
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - name: Deploy Cloudflare Worker
-        run: npx wrangler deploy .open-next/worker.js --name=freshbiz-worker
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy .open-next/assets --project-name=freshbiz-app
         working-directory: pc-admin
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
