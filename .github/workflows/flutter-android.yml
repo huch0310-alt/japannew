@@ -15,7 +15,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
+          flutter-version: '3.19.0'
           channel: 'stable'
 
       - name: Setup Java
@@ -25,15 +25,7 @@ jobs:
           java-version: '21'
 
       - name: Get dependencies
-        run: |
-          echo "=== Current directory ==="
-          pwd
-          echo "=== Listing files ==="
-          ls -la
-          echo "=== flutter-app exists? ==="
-          ls -la flutter-app/ || echo "flutter-app not found"
-          echo "=== Running pub get ==="
-          flutter pub get
+        run: flutter pub get
         working-directory: flutter-app
 
       - name: Build Debug APK
