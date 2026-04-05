@@ -24,10 +24,16 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Test pub.dev connectivity
+        run: |
+          curl -v https://pub.dev 2>&1 | head -30
+
       - name: Get dependencies
         run: |
-          flutter pub get --offline || flutter pub get
+          flutter pub get
         working-directory: flutter-app
+        env:
+          PUB_CACHE: /tmp/pub-cache
 
       - name: Build Debug APK
         run: flutter build apk --debug
