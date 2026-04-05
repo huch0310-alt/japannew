@@ -24,19 +24,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Debug network
-        run: |
-          echo "=== Testing network ==="
-          curl -v https://pub.dev 2>&1 | head -20
-          echo "=== Flutter version ==="
-          flutter --version
-          echo "=== Flutter doctor ==="
-          flutter doctor
-
       - name: Get dependencies
         run: |
-          flutter pub get --verbose
-        working-directory: flutter-app
+          cd flutter-app
+          dart pub get
+        env:
+          PUB_CACHE: /opt/hostedtoolcache/pub-cache
 
       - name: Build Debug APK
         run: flutter build apk --debug
