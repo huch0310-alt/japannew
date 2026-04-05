@@ -24,22 +24,9 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Verify Flutter installation
-        run: |
-          echo "=== Flutter version ==="
-          flutter --version
-          echo "=== Flutter doctor ==="
-          flutter doctor -v
-          echo "=== PUB_CACHE ==="
-          echo $PUB_CACHE
-          echo "=== PATH ==="
-          echo $PATH
-
       - name: Get dependencies
         run: |
-          echo "=== Starting pub get ==="
-          flutter pub get --verbose 2>&1
-          echo "=== pub get finished ==="
+          flutter pub get --offline || flutter pub get
         working-directory: flutter-app
 
       - name: Build Debug APK
