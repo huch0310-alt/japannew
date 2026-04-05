@@ -9,27 +9,33 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: pc-admin/package-lock.json
+
       - name: Install dependencies
-        run: |
-          cd pc-admin
-          npm install --force
+        run: npm install
         working-directory: pc-admin
+
       - name: Install Wrangler
         run: npm install -D wrangler @opennextjs/cloudflare
         working-directory: pc-admin
+
       - name: Build Next.js
         run: npm run build
         working-directory: pc-admin
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
       - name: Build OpenNext bundle
         run: node node_modules/@opennextjs/cloudflare/dist/cli/index.js build
         working-directory: pc-admin
+
       - name: Deploy to Cloudflare
         run: node node_modules/@opennextjs/cloudflare/dist/cli/index.js deploy
         working-directory: pc-admin
