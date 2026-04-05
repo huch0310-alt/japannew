@@ -1,0 +1,45 @@
+name: Database Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'migrate'
+        type: choice
+        options:
+          - migrate
+          - reset
+          - status
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: |
+          curl -L https://github.com/supabase/cli/releases/download/v1.220.2/supabase_linux_amd64.tar.gz -o supabase.tar.gz
+          tar -xzf supabase.tar.gz
+          chmod +x supabase
+          echo "$GITHUB_WORKSPACE" >> $GITHUB_PATH
+
+      - name: Link project
+        run: ./supabase link --project-ref mfasmbmddjwzmtwgdgyf --access-token ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Run migrations
+        if: github.event.inputs.action == 'migrate'
+        run: ./supabase db push
+
+      - name: Check status
+        if: github.event.inputs.action == 'status'
+        run: ./supabase db status
+
+      - name: Reset database
+        if: github.event.inputs.action == 'reset'
+        run: ./supabase db reset
