@@ -29,12 +29,18 @@ jobs:
         working-directory: flutter-app
 
       - name: Build Debug APK
-        run: flutter build apk --debug
+        run: |
+          flutter build apk --debug
         working-directory: flutter-app
+        env:
+          JAVA_HOME: $JAVA_HOME
 
       - name: Build Release APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release
         working-directory: flutter-app
+        env:
+          JAVA_HOME: $JAVA_HOME
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
