@@ -30,14 +30,14 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          flutter build apk --debug
+          flutter build apk --debug 2>&1
         working-directory: flutter-app
         env:
           JAVA_HOME: $JAVA_HOME
 
       - name: Build Release APK
         run: |
-          flutter build apk --release
+          flutter build apk --release 2>&1
         working-directory: flutter-app
         env:
           JAVA_HOME: $JAVA_HOME
