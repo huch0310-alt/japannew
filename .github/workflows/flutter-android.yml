@@ -24,9 +24,21 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Cache Flutter packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ~/.gradle/caches
+          key: ${{ runner.os }}-flutter-deps-${{ hashFiles('flutter-app/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-deps-
+
       - name: Get dependencies
         run: flutter pub get
         working-directory: flutter-app
+        env:
+          PUB_CACHE: ~/.pub-cache
 
       - name: Build Debug APK
         run: flutter build apk --debug
@@ -42,12 +54,14 @@ jobs:
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: debug-apk
           path: flutter-app/build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: release-apk
           path: flutter-app/build/app/outputs/flutter-apk/app-release.apk
