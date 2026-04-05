@@ -30,37 +30,26 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          set -e
-          flutter build apk --debug 2>&1 | tee build.log
+          flutter build apk --debug
         working-directory: flutter-app
         env:
           JAVA_HOME: $JAVA_HOME
 
-      - name: Upload build log
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: build-log
-          path: flutter-app/build.log
-
       - name: Build Release APK
         run: |
-          set -e
-          flutter build apk --release 2>&1 | tee build.log
+          flutter build apk --release
         working-directory: flutter-app
         env:
           JAVA_HOME: $JAVA_HOME
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: debug-apk
           path: flutter-app/build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: release-apk
           path: flutter-app/build/app/outputs/flutter-apk/app-release.apk
