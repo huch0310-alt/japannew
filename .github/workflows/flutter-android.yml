@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -17,8 +17,6 @@ jobs:
         with:
           flutter-version: '3.24.0'
           channel: 'stable'
-          cache: true
-          cache-dependency-path: flutter-app/pubspec.lock
 
       - name: Setup Java
         uses: actions/setup-java@v4
