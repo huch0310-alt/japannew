@@ -26,10 +26,15 @@ jobs:
 
       - name: Get dependencies
         run: |
-          cd flutter-app
-          dart pub get
-        env:
-          PUB_CACHE: /opt/hostedtoolcache/pub-cache
+          echo "=== Current directory ==="
+          pwd
+          echo "=== Listing files ==="
+          ls -la
+          echo "=== flutter-app exists? ==="
+          ls -la flutter-app/ || echo "flutter-app not found"
+          echo "=== Running pub get ==="
+          flutter pub get
+        working-directory: flutter-app
 
       - name: Build Debug APK
         run: flutter build apk --debug
