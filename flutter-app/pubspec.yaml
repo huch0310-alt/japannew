@@ -3,9 +3,6 @@ description: 日本B端生鲜销售系统APP
 publish_to: 'none'
 version: 1.0.0+1
 
-environment:
-  sdk: '>=3.7.0 <4.0.0'
-
 dependencies:
   flutter:
     sdk: flutter
@@ -13,13 +10,7 @@ dependencies:
     sdk: flutter
   intl: ^0.20.2
   provider: ^6.1.1
-  go_router: ^12.1.1
   supabase_flutter: ^2.3.0
-  cached_network_image: ^3.3.0
-  image_picker: ^1.0.4
-  pdf: ^3.10.4
-  printing: ^5.11.1
-  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
